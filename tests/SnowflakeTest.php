@@ -11,6 +11,7 @@
 namespace Tests;
 
 use Godruoyi\Snowflake\exception\InvalidParameterException;
+use Godruoyi\Snowflake\exception\InvalidTimeException;
 use Godruoyi\Snowflake\RandomSequenceResolver;
 use Godruoyi\Snowflake\SequenceResolver;
 use Godruoyi\Snowflake\Snowflake;
@@ -25,7 +26,8 @@ class SnowflakeTest extends TestCase
         $this->assertTrue(strlen($snowflake->id()) <= 19);
     }
 
-    public function testInvalidDatacenterIDAndWorkID() {
+    public function testInvalidDatacenterIDAndWorkID()
+    {
         try {
             new Snowflake(-1, 0);
         } catch (\Exception $e) {
@@ -102,7 +104,7 @@ class SnowflakeTest extends TestCase
         $this->assertSame($data['workerid'], 1);
         $this->assertSame($data['datacenter'], 1);
         $this->assertSame($data['sequence'], 0);
-        $this->assertTrue($data['timestamp'] >= ($now-$star_timestamp));
+        $this->assertTrue($data['timestamp'] >= ($now - $star_timestamp));
     }
 
     public function testGetCurrentMicrotime()
@@ -196,5 +198,18 @@ class SnowflakeTest extends TestCase
         $this->expectExceptionMessage('The current microtime - starttime is not allowed to exceed -1 ^ (-1 << 41), You can reset the start time to fix this');
 
         $snowflake->setStartTimeStamp(strtotime('1900-01-01') * 1000);
+    }
+
+    public function testTimeCallback()
+    {
+        $snowflake = new FakeSnowflake();
+
+        // For RandomSequenceResolver
+        $snowflake->setSequenceResolver(new RandomSequenceResolver());
+        // init lastTime
+        $snowflake->id();
+        sleep(1);
+        $this->expectException(InvalidTimeException::class);
+        $snowflake->id();
     }
 }

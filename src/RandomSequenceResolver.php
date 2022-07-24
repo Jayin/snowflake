@@ -10,6 +10,8 @@
 
 namespace Godruoyi\Snowflake;
 
+use Godruoyi\Snowflake\exception\InvalidTimeException;
+
 class RandomSequenceResolver implements SequenceResolver
 {
     /**
@@ -31,6 +33,9 @@ class RandomSequenceResolver implements SequenceResolver
      */
     public function sequence(int $currentTime)
     {
+        if ($currentTime < $this->lastTimeStamp) {
+            throw new InvalidTimeException("CurrentTimeStamp($currentTime) is latter than LastTimeStamp($this->lastTimeStamp)");
+        }
         if ($this->lastTimeStamp === $currentTime) {
             ++$this->sequence;
             $this->lastTimeStamp = $currentTime;
