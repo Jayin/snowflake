@@ -130,7 +130,7 @@ class Snowflake
      */
     public function getCurrentMicrotime()
     {
-        return floor(microtime(true) * 1000) | 0;
+        return floor(microtime(true) * 1000);
     }
 
     /**
