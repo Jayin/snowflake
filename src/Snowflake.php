@@ -10,6 +10,9 @@
 
 namespace Godruoyi\Snowflake;
 
+use Godruoyi\Snowflake\exception\InvalidParameterException;
+use SebastianBergmann\LinesOfCode\IllogicalValuesException;
+
 class Snowflake
 {
     public const MAX_TIMESTAMP_LENGTH = 41;
@@ -63,14 +66,19 @@ class Snowflake
      * @param int $datacenter
      * @param int $workerid
      */
-    public function __construct(int $datacenter = null, int $workerid = null)
+    public function __construct(int $datacenter = 0, int $workerid = 0)
     {
         $maxDataCenter = -1 ^ (-1 << self::MAX_DATACENTER_LENGTH);
         $maxWorkId = -1 ^ (-1 << self::MAX_WORKID_LENGTH);
 
-        // If not set datacenter or workid, we will set a default value to use.
-        $this->datacenter = $datacenter > $maxDataCenter || $datacenter < 0 ? mt_rand(0, 31) : $datacenter;
-        $this->workerid = $workerid > $maxWorkId || $workerid < 0 ? mt_rand(0, 31) : $workerid;
+        if ($datacenter < 0 || $datacenter > $maxDataCenter) {
+            throw new InvalidParameterException("`DataCenter` must >= 0 and <= $maxDataCenter");
+        }
+        if ($workerid < 0 || $workerid > $maxWorkId) {
+            throw new InvalidParameterException("`WorkId` must >= 0 and <= $maxWorkId");
+        }
+        $this->datacenter = $datacenter;
+        $this->workerid = $workerid;
     }
 
     /**
@@ -148,7 +156,7 @@ class Snowflake
     }
 
     /**
-     * Get start timestamp (millisecond), If not set default to 2019-08-08 08:08:08.
+     * Get start timestamp (millisecond)
      *
      * @return int
      */
@@ -158,10 +166,16 @@ class Snowflake
             return $this->startTime;
         }
 
-        // We set a default start time if you not set.
-        $defaultTime = '2019-08-08 08:08:08';
+        return $this->defaultStartTimeStamp();
+    }
 
-        return strtotime($defaultTime) * 1000;
+    /**
+     *
+     * @return float|int
+     */
+    protected function defaultStartTimeStamp()
+    {
+        return strtotime(date('Y-m-d')) * 1000;
     }
 
     /**
